@@ -1,27 +1,33 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Airbag & Radar Solutions - Tienda</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
-  body{background:#f4f4f4;color:#333}
-  header{background:#0d1b2a;color:#fff;padding:20px;text-align:center}
-  nav{display:flex;justify-content:center;gap:10px;background:#1b263b;padding:10px;flex-wrap:wrap}
-  nav button{background:#415a77;color:#fff;border:none;padding:12px 24px;font-size:16px;cursor:pointer;border-radius:4px;transition:.3s}
-  nav button:hover{background:#778da9}
-  section{display:none;padding:20px;max-width:1200px;margin:auto;background:#fff;min-height:70vh}
-  section.active{display:block}
-  h2{margin-bottom:15px;color:#1b263b}
-  .producto-card{border:1px solid #ddd;padding:10px;margin:10px 0;border-radius:6px}
-  .carousel{position:relative;width:100%;height:350px;background:#000;overflow:hidden;border-radius:8px;margin-bottom:15px}
-  .carousel img{width:100%;height:100%;object-fit:contain;display:none}
-  .carousel img.active{display:block}
-  .carousel button{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.7);border:none;padding:10px;font-size:20px;cursor:pointer;border-radius:50%}
-  .prev{left:10px}.next{right:10px}
-  footer{text-align:center;padding:20px;background:#0d1b2a;color:#fff}
-</style>
+  <meta charset="UTF-8">
+  <title>Airbag & Radar Solutions - Catálogo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+    body{background:#ededed;color:#333}
+    header{background:#ffe600;color:#000;padding:20px;text-align:center}
+    nav{display:flex;justify-content:center;gap:10px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.1);padding:10px;flex-wrap:wrap}
+    nav button{background:#fff;border:1px solid #ddd;padding:10px 20px;font-size:16px;cursor:pointer;border-radius:8px;transition:.3s}
+    nav button:hover{background:#ffe600;border-color:#ffe600}
+    section{display:none;padding:20px;max-width:1200px;margin:auto;background:#fff;min-height:70vh}
+    section.active{display:block}
+    h2{margin-bottom:15px;color:#333}
+    /* ESTILO MERCADO LIBRE */
+    .catalogo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding:20px 0}
+    .product-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.05);transition:.3s}
+    .product-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1)}
+    .card-img{width:100%;height:200px;object-fit:cover;background:#f5f5f5}
+    .card-body{padding:15px}
+    .card-title{font-size:16px;font-weight:600;color:#000;margin-bottom:6px;height:40px;overflow:hidden}
+    .card-meta{font-size:14px;color:#666;margin-bottom:6px}
+    .card-price{font-size:20px;font-weight:700;color:#00a650;margin-bottom:10px}
+    .card-btn{background:#25D366;color:#fff;padding:10px 16px;border:none;border-radius:8px;font-size:14px;cursor:pointer;width:100%;transition:.3s}
+    .card-btn:hover{background:#1ebe5a}
+    footer{text-align:center;padding:20px;background:#fff}
+  </style>
 </head>
 <body>
 
@@ -35,87 +41,88 @@
   <button onclick="mostrar('contacto')">Contacto</button>
 </nav>
 
-<!-- CATÁLOGO -->
+<!-- CATÁLOGO ESTILO MERCADO LIBRE -->
 <section id="tienda" class="active">
   <h2>Catálogo de productos</h2>
-
-  <!-- Carrusel de imágenes -->
-  <div class="carousel">
-    <img id="img1" src="" alt="Imagen 1">
-    <img id="img2" src="" alt="Imagen 2">
-    <img id="img3" src="" alt="Imagen 3">
-    <button class="prev" onclick="mover(-1)">&#10094;</button>
-    <button class="next" onclick="mover(+1)">&#10095;</button>
-  </div>
-
-  <!-- Descripción -->
-  <div id="textoDescripcion" style="margin:15px 0;font-size:16px;"></div>
-
-  <!-- Productos con botón WhatsApp -->
-  <div id="catalogoCliente"></div>
+  <div id="catalogoCliente" class="catalogo-grid">Cargando catálogo...</div>
 </section>
 
 <!-- CONTACTO -->
 <section id="contacto">
   <h2>Contacto</h2>
-  <a href="mailto:ventas@airbagradarsolutions.com" style="display:inline-block;background:#28a745;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;margin-bottom:15px">📧 Correo</a>
-  <a href="https://wa.me/526611721599?text=Hola,%20vengo%20de%20Airbag%20&%20Radar%20Solutions%20y%20necesito%20información." style="display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none">📲 WhatsApp +52 661 172 1599</a>
+  <a href="https://wa.me/526611721599" target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;margin-bottom:15px">📧 Correo</a>
+  <a href="https://wa.me/526611721599" target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none">📲 WhatsApp +52 661 172 1599</a>
 </section>
 
 <footer>Airbag & Radar Solutions © 2025</footer>
 
 <script>
-  /* ---------- CARRUSEL ---------- */
-  let idxImg=0;
-  function mover(dir){
-    const imgs=document.querySelectorAll('.carousel img');
-    imgs[idxImg].classList.remove('active');
-    idxImg=(idxImg+dir+imgs.length)%imgs.length;
-    imgs[idxImg].classList.add('active');
+  /* ---------- CARGAR PRODUCTOS DESDE TU CSV ---------- */
+  async function cargarProductos() {
+    const res = await fetch('https://raw.githubusercontent.com/xlaraislas-tech/airbag-radar-solutions/main/ACA VA EL NOMBRE REAL DE TU ARCHIVO.csv');
+    const text = await res.text();
+    const lineas = text.split('\n');
+    const productos = [];
+    for (let i = 1; i < lineas.length; i++) {
+      const cols = lineas[i].split(',');
+      if (cols.length >= 13) {
+        productos.push({
+          codigo_oem: cols[0].trim(),
+          titulo: cols[1].replace(/"/g, '').trim(),
+          descripcion_larga: cols[2].replace(/"/g, '').trim(),
+          caracteristicas: cols[3].replace(/"/g, '').trim(),
+          categoria: cols[4].trim(),
+          subcategoria: cols[5].trim(),
+          marca: cols[6].trim(),
+          modelo: cols[7].trim(),
+          anio: cols[8].trim(),
+          precio: parseFloat(cols[9]) || 0,
+          stock: parseInt(cols[10]) || 0,
+          imagen_url: cols[11].trim(),
+          imagen_url_2: cols[12].trim(),
+          imagen_url_3: cols[13].trim(),
+          etiquetas: cols[14].replace(/"/g, '').trim()
+        });
+      }
+    }
+    renderCatalogo(productos);
   }
-  /* ---------- PRODUCTOS ---------- */
-  const productos=[
-    {id:'volante',nombre:'Volante c/airbag'},
-    {id:'copiloto',nombre:'Airbag copiloto'},
-    {id:'modulo',nombre:'Módulo SRS'},
-    {id:'sensor',nombre:'Sensor impacto'}
-  ];
-  function renderTienda(){
-    const div=document.getElementById('catalogoCliente');
-    let html='';
-    productos.forEach(p=>{
-      const precio=localStorage.getItem('precio_'+p.id)||0;
-      const stock=localStorage.getItem('stock_'+p.id)||0;
-      html+=`
-        <div class="producto-card">
-          <strong>${p.nombre}</strong><br>
-          Precio: $${precio} | Stock: ${stock}<br>
-          <button onclick="wpProducto('${p.nombre}',${precio},${stock})">Comprar por WhatsApp</button>
+
+  function renderCatalogo(productos) {
+    const div = document.getElementById('catalogoCliente');
+    if (productos.length === 0) {
+      div.innerHTML = '<p>No hay productos cargados aún.</p>';
+      return;
+    }
+    let html = '';
+    productos.forEach(p => {
+      html += `
+        <div class="product-card">
+          <img class="card-img" src="${p.imagen_url}" alt="${p.titulo}" onerror="this.src='https://i.imgur.com/placeholder.png'">
+          <div class="card-body">
+            <div class="card-title">${p.titulo}</div>
+            <div class="card-meta">${p.marca} ${p.modelo} ${p.anio}</div>
+            <div class="card-price">$${p.precio} MXN</div>
+            <button class="card-btn" onclick="wpProducto('${p.codigo_oem}','${p.titulo}',${p.precio},${p.stock})">Comprar por WhatsApp</button>
+          </div>
         </div>`;
     });
-    div.innerHTML=html;
+    div.innerHTML = html;
   }
-  /* ---------- WHATSAPP POR PRODUCTO ---------- */
-  function wpProducto(nombre, precio, stock){
-    const texto=`Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nProducto: ${nombre}\nPrecio: $${precio} MXN\nStock disponible: ${stock} unidades\n\n¿Cómo hago el depósito?`;
-    window.open(`https://wa.me/526611721599?text=${encodeURIComponent(texto)}`,'_blank');
+
+  function wpProducto(codigo, titulo, precio, stock) {
+    const texto = `Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nCódigo: ${codigo}\nProducto: ${titulo}\nPrecio: $${precio} MXN\nStock: ${stock} unidades\n\n¿Cómo hago el depósito?`;
+    window.open(`https://wa.me/526611721599?text=${encodeURIComponent(texto)}`, '_blank');
   }
-  /* ---------- DESCRIPCIÓN ---------- */
-  function mostrarDescripcion(){
-    const guardado=localStorage.getItem('descripcionProducto')||'Pronto más información.';
-    document.getElementById('textoDescripcion').textContent=guardado;
-  }
-  /* ---------- INICIO ---------- */
-  window.onload=()=>{
-    renderTienda();
-    mostrarDescripcion();
-    document.querySelector('.carousel img').classList.add('active');
-  };
-  /* ---------- NAVEGACIÓN ---------- */
-  function mostrar(id){
-    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+
+  function mostrar(id) {
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
+
+  window.onload = () => {
+    cargarProductos();
+  };
 </script>
 </body>
 </html>
