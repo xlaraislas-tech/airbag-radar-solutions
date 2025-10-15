@@ -59,7 +59,7 @@
 <script>
   /* ---------- CARGAR PRODUCTOS DESDE TU CSV ---------- */
   async function cargarProductos() {
-    const res = await fetch('https://raw.githubusercontent.com/xlaraislas-tech/airbag-radar-solutions/main/ACA VA EL NOMBRE REAL DE TU ARCHIVO.csv');
+    const res = await fetch('https://raw.githubusercontent.com/xlaraislas-tech/airbag-radar-solutions/main/productos-ml-final-v10.csv');
     const text = await res.text();
     const lineas = text.split('\n');
     const productos = [];
@@ -125,4 +125,5 @@
   };
 </script>
 </body>
+
 </html>
