@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -42,7 +41,7 @@
   <button onclick="mostrar('contacto')">Contacto</button>
 </nav>
 
-<!-- CATÁLOGO ESTILO MERCADO LIBRE -->
+<!-- CATÁLOGO -->
 <section id="tienda" class="active">
   <h2>Catálogo de productos</h2>
   <div id="catalogoCliente" class="catalogo-grid">Cargando catálogo...</div>
@@ -51,81 +50,83 @@
 <!-- CONTACTO -->
 <section id="contacto">
   <h2>Contacto</h2>
-  <a href="https://wa.me/526611721599" target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;margin-bottom:15px">📧 Correo</a>
   <a href="https://wa.me/526611721599" target="_blank" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none">📲 WhatsApp +52 661 172 1599</a>
 </section>
 
 <footer>Airbag & Radar Solutions © 2025</footer>
 
 <script>
-  /* ---------- CARGAR PRODUCTOS DESDE TU CSV ---------- */
-  async function cargarProductos() {
-    const url = 'https://raw.githubusercontent.com/xlaraislas-tech/airbag-radar-solutions/main/productos-ml-final-v10.csv';
-    const res = await fetch(url);
-    const texto = await res.text();
-
-    Papa.parse(texto, {
-      header: true,
-      skipEmptyLines: true,
-      complete: function(res) {
-        const productos = res.data.map(p => ({
-          codigo_oem:       (p.codigo_oem       || '').trim(),
-          titulo:           (p.titulo           || '').trim(),
-          descripcion_larga:(p.descripcion_larga|| '').trim(),
-          caracteristicas:  (p.caracteristicas  || '').trim(),
-          categoria:        (p.categoria        || '').trim(),
-          subcategoria:     (p.subcategoria     || '').trim(),
-          marca:            (p.marca            || '').trim(),
-          modelo:           (p.modelo           || '').trim(),
-          anio:             (p.anio             || '').trim(),
-          precio:           parseFloat(p.precio) || 0,
-          stock:            parseInt(p.stock)   || 0,
-          imagen_url:       (p.imagen_url       || '').trim(),
-          imagen_url_2:     (p.imagen_url_2     || '').trim(),
-          imagen_url_3:     (p.imagen_url_3     || '').trim(),
-          etiquetas:        (p.etiquetas        || '').trim()
-        }));
+  /* ---------- ANTI-PARPADE0 + SAFE CSV ---------- */
+  async function cargarProductos(){
+    try{
+      const url='https://raw.githubusercontent.com/xlaraislas-tech/airbag-radar-solutions/main/productos-ml-final-v10.csv';
+      const res=await fetch(url); if(!res.ok) throw new Error('CSV no encontrado');
+      const text=await res.text();
+      Papa.parse(text,{header:true, skipEmptyLines:true, complete:function(result){
+        const productos=result.data.map(p=>{
+          function val(campo){return (p[campo]||'').toString().trim();}
+          return{
+            codigo_oem:        val('codigo_oem'),
+            titulo:            val('titulo'),
+            descripcion_larga: val('descripcion_larga'),
+            caracteristicas:   val('caracteristicas'),
+            categoria:         val('categoria'),
+            subcategoria:      val('subcategoria'),
+            marca:             val('marca'),
+            modelo:            val('modelo'),
+            anio:              val('anio'),
+            precio:            parseFloat(p.precio)||0,
+            stock:             parseInt(p.stock)||0,
+            imagen_url:        val('imagen_url'),
+            imagen_url_2:      val('imagen_url_2'),
+            imagen_url_3:      val('imagen_url_3'),
+            etiquetas:         val('etiquetas')
+          };
+        }).filter(p=>p.titulo);
         renderCatalogo(productos);
-      }
-    });
-  }
-
-  function renderCatalogo(productos) {
-    const div = document.getElementById('catalogoCliente');
-    if (productos.length === 0) {
-      div.innerHTML = '<p>No hay productos cargados aún.</p>';
-      return;
+      }});
+    }catch(err){
+      console.error(err);
+      document.getElementById('catalogoCliente').innerHTML='<p>Error al cargar catálogo. Recarga la página.</p>';
     }
-    let html = '';
-    productos.forEach(p => {
-      html += `
-        <div class="product-card">
-          <img class="card-img" src="${p.imagen_url}" alt="${p.titulo}" onerror="this.src='https://i.imgur.com/placeholder.png'">
-          <div class="card-body">
-            <div class="card-title">${p.titulo}</div>
-            <div class="card-meta">${p.marca} ${p.modelo} ${p.anio}</div>
-            <div class="card-price">$${p.precio} MXN</div>
-            <button class="card-btn" onclick="wpProducto('${p.codigo_oem}','${p.titulo}',${p.precio},${p.stock})">Comprar por WhatsApp</button>
-          </div>
-        </div>`;
+  }
+
+  function renderCatalogo(productos){
+    const div=document.getElementById('catalogoCliente');
+    if(!productos.length){div.innerHTML='<p>No hay productos cargados aún.</p>';return;}
+    div.innerHTML='';   // solo una vez
+    productos.forEach(p=>{
+      const titulo = p.titulo.replace(/"/g,'&quot;');
+      const marca  = p.marca.replace(/"/g,'&quot;');
+      const modelo = p.modelo.replace(/"/g,'&quot;');
+      const anio   = p.anio.replace(/"/g,'&quot;');
+      const img    = (p.imagen_url||'').trim();
+      const imgTag = `<img class="card-img" src="${img}" alt="${titulo}" onerror="if(this.src!=='https://i.imgur.com/placeholder.png')this.src='https://i.imgur.com/placeholder.png';">`;
+
+      div.insertAdjacentHTML('beforeend',`
+      <div class="product-card">
+        ${imgTag}
+        <div class="card-body">
+          <div class="card-title">${titulo}</div>
+          <div class="card-meta">${marca} ${modelo} ${anio}</div>
+          <div class="card-price">$${p.precio} MXN</div>
+          <button class="card-btn" onclick="wpProducto('${p.codigo_oem}','${titulo}',${p.precio},${p.stock})">Comprar por WhatsApp</button>
+        </div>
+      </div>`);
     });
-    div.innerHTML = html;
   }
 
-  function wpProducto(codigo, titulo, precio, stock) {
-    const texto = `Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nCódigo: ${codigo}\nProducto: ${titulo}\nPrecio: $${precio} MXN\nStock: ${stock} unidades\n\n¿Cómo hago el depósito?`;
-    window.open(`https://wa.me/526611721599?text=${encodeURIComponent(texto)}`, '_blank');
+  function wpProducto(codigo,titulo,precio,stock){
+    const texto=`Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nCódigo: ${codigo}\nProducto: ${titulo}\nPrecio: $${precio} MXN\nStock: ${stock} unidades\n\n¿Cómo hago el depósito?`;
+    window.open(`https://wa.me/526611721599?text=${encodeURIComponent(texto)}`,'_blank');
   }
 
-  function mostrar(id) {
-    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  function mostrar(id){
+    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
 
-  window.onload = () => {
-    cargarProductos();
-  };
+  window.onload=()=>{cargarProductos();};
 </script>
 </body>
 </html>
-
