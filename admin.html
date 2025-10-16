@@ -299,33 +299,6 @@ function mostrarDescripcion() {
   document.getElementById('textoDescripcion').textContent = guardado;
 }
 
-/* ---------- IMÁGENES ---------- */
-let idxImg=0;
-function mover(dir){
-  const imgs=document.querySelectorAll('.carousel img');
-  imgs[idxImg].classList.remove('active');
-  idxImg=(idxImg+dir+imgs.length)%imgs.length;
-  imgs[idxImg].classList.add('active');
-}
-
-function subirImg(num,input){
-  const bar=document.getElementById('bar'+num);
-  const img=document.getElementById('img'+(num+1));
-  if(!input.files||!input.files[0])return;
-  let pct=0;
-  const interval=setInterval(()=>{
-    pct+=10;
-    bar.style.width=pct+'%';
-    bar.textContent=pct+'%';
-    if(pct>=100){
-      clearInterval(interval);
-      const reader=new FileReader();
-      reader.onload=e=>{img.src=e.target.result;if(num===0)img.classList.add('active');};
-      reader.readAsDataURL(input.files[0]);
-    }
-  },50);
-}
-
 /* ---------- WHATSAPP ---------- */
 function wpProducto(codigo,nombre,precio,stock){
   const texto=`Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nCódigo: ${codigo}\nProducto: ${nombre}\nPrecio: $${precio} MXN\nStock: ${stock} unidades\n\n¿Cómo hago el depósito?`;
@@ -333,7 +306,7 @@ function wpProducto(codigo,nombre,precio,stock){
 }
 
 /* ---------- GUARDAR CAMBIOS EN GITHUB ---------- */
-const TOKEN = "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";
+const TOKEN = "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";
 async function guardarCambiosEnGitHub(){
   const lista   = JSON.parse(localStorage.getItem('productos300'))||[];
   const csv     = Papa.unparse(lista);
@@ -477,4 +450,3 @@ function iniciarTodo(){
 </script>
 </body>
 </html>
-
