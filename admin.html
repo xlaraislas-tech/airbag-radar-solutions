@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Admin - Airbag & Radar Solutions</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
   body{background:#f4f4f4;color:#333}
@@ -66,7 +67,6 @@
     <div class="stat-card"><h3>Productos Vendidos</h3><p class="stat-number" id="productosVendidos">0</p></div>
     <div class="stat-card"><h3>Clientes Nuevos</h3><p class="stat-number" id="clientesNuevos">0</p></div>
   </div>
-  <h3>Gráfica de ventas mes actual</h3>
   <canvas id="grafica" width="600" height="200"></canvas>
 </section>
 
@@ -96,7 +96,7 @@
 <section id="tienda">
   <h2>🛒 Tienda Admin - Airbag & Radar Solutions</h2>
 
-  <!-- Admin: subir imágenes y descripción -->
+  <!-- Subir imágenes y descripción -->
   <div class="admin-only">
     <h3>Subir imágenes del producto</h3>
     <label>Imagen 1:</label><input type="file" accept="image/*" onchange="subirImg(0,this)"><div class="progress-bar"><div id="bar0">0%</div></div>
@@ -136,11 +136,17 @@
 <section id="inventario">
   <h2>📦 Inventario 300 Productos - Admin</h2>
 
-  <!-- SUBIDA MASIVA POR CSV -->
+  <!-- BOTÓN PARA GUARDAR CAMBIOS EN GITHUB -->
+  <div class="admin-only" style="margin:20px 0;border:2px dashed #28a745;padding:15px">
+    <h3>💾 Guardar cambios en GitHub</h3>
+    <button onclick="guardarCambiosEnGitHub()">Subir CSV actualizado</button>
+    <p id="resGitHub"></p>
+  </div>
+
+  <!-- CARGA MASIVA POR CSV -->
   <div class="admin-only" style="margin:20px 0;border:2px dashed #2196F3;padding:15px">
     <h3>1. Descargá la plantilla Excel (300 productos)</h3>
     <a href="data:text/csv;charset=utf-8,codigo_oem,nombre,marca,modelo,anio,precio,stock,imagen_url,descripcion%0AVOL-CIV-18,Airbag Volante,Honda,Civic,2018,3500,5,https://i.imgur.com/ejemplo1.jpg,Original Honda%0AAIR-COP-20,Airbag Copiloto,Toyota,RAV4,2020,2800,3,https://i.imgur.com/ejemplo2.jpg,Original Toyota%0AMOD-SRS-19,Módulo SRS,Nissan,Sentra,2019,3200,7,https://i.imgur.com/ejemplo3.jpg,Módulo restaurado%0ASEN-IMP-21,Sensor Impacto,Mazda,3,2021,1500,10,https://i.imgur.com/ejemplo4.jpg,Sensor nuevo" download="plantilla_productos.csv">⬇️ plantilla_productos.csv</a>
-
     <h3>2. Seleccioná tu archivo CSV (hasta 300 filas)</h3>
     <input type="file" id="csvFile" accept=".csv" />
     <button onclick="cargarCSV()">Cargar / actualizar productos</button>
@@ -172,317 +178,241 @@
 <section id="contacto">
   <h2>Contacto - Airbag & Radar Solutions</h2>
   <a href="mailto:ventas@airbagradarsolutions.com" style="display:inline-block;background:#28a745;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;margin-bottom:15px">📧 Correo</a>
-  <a href="https://wa.me/526611721599?text=Hola,%20vengo%20de%20Airbag%20&%20Radar%20Solutions%20y%20necesito%20información." style="display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none">📲 WhatsApp +52 661 172 1599</a>
+  <a href="https://wa.me/526611721599?text=Hola ,%20vengo%20de%20Airbag%20&%20Radar%20Solutions%20y%20necesito%20información." style="display:inline-block;background:#25D366;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none">📲 WhatsApp +52 661 172 1599</a>
 </section>
 
 <footer>Airbag & Radar Solutions © 2025</footer>
-
-</div> <!-- FIN PANEL -->
+</div>
 
 <script>
-  /* ---------- PIN DE ENTRADA ---------- */
-  function verificarPin(){
-    if(document.getElementById('pin').value==='1234'){
-      document.getElementById('login').style.display='none';
-      document.getElementById('panel').style.display='block';
-      window.onload();
-    }else{
-      alert('PIN incorrecto'); 
-      window.location.href='index.html';
-    }
+/* ---------- PIN DE ENTRADA ---------- */
+function verificarPin(){
+  if(document.getElementById('pin').value==='1234'){
+    document.getElementById('login').style.display='none';
+    document.getElementById('panel').style.display='block';
+    iniciarTodo();
+  }else{
+    alert('PIN incorrecto'); 
+    window.location.href='index.html';
   }
+}
 
-  /* ---------- NAVEGACIÓN ---------- */
-  function mostrar(id){
-    document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    if(id==='dashboard') actualizarDashboard();
-    if(id==='ordenes') renderOrdenes();
-    if(id==='tienda'){renderTienda(); mostrarDescripcion();}
-    if(id==='inventario') renderInventario();
-  }
+/* ---------- NAVEGACIÓN ---------- */
+function mostrar(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='dashboard') actualizarDashboard();
+  if(id==='ordenes') renderOrdenes();
+  if(id==='tienda'){renderTienda(); mostrarDescripcion();}
+  if(id==='inventario') renderInventario();
+}
 
-  /* ---------- DASHBOARD ---------- */
-  function actualizarDashboard(){
-    const ordenes=JSON.parse(localStorage.getItem('ordenes')||'[]');
-    const mes=new Date().getMonth();
-    const delMes=ordenes.filter(o=>new Date(o.fecha).getMonth()===mes);
-    document.getElementById('ordenesMes').textContent=delMes.length;
-    const ingresos=delMes.reduce((s,o)=>s+parseFloat(o.costo||0),0);
-    document.getElementById('ingresosMes').textContent='$'+ingresos.toFixed(2);
-    document.getElementById('productosVendidos').textContent=delMes.filter(o=>o.servicio.includes('Venta')).length;
-    document.getElementById('clientesNuevos').textContent=[...new Set(delMes.map(o=>o.cliente))].length;
-    const canvas=document.getElementById('grafica');
-    const ctx=canvas.getContext('2d');
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle='#28a745';
-    const max=Math.max(...delMes.map(()=>1),1);
-    const bar=40,gap=10;
-    delMes.slice(-10).forEach((o,i)=>{
-      const h=(o.costo/max)*150;
-      ctx.fillRect(i*(bar+gap)+gap,200-h,bar,h);
-    });
-  }
+/* ---------- DASHBOARD ---------- */
+function actualizarDashboard(){
+  const ordenes=JSON.parse(localStorage.getItem('ordenes')||'[]');
+  const mes=new Date().getMonth();
+  const delMes=ordenes.filter(o=>new Date(o.fecha).getMonth()===mes);
+  document.getElementById('ordenesMes').textContent=delMes.length;
+  const ingresos=delMes.reduce((s,o)=>s+parseFloat(o.costo||0),0);
+  document.getElementById('ingresosMes').textContent='$'+ingresos.toFixed(2);
+  document.getElementById('productosVendidos').textContent=delMes.filter(o=>o.servicio.includes('Venta')).length;
+  document.getElementById('clientesNuevos').textContent=[...new Set(delMes.map(o=>o.cliente))].length;
+}
 
-  /* ---------- ÓRDENES ---------- */
-  class SistemaOrdenes{
-    constructor(){
-      this.ordenes=JSON.parse(localStorage.getItem('ordenes')||'[]');
-      this.numero=parseInt(localStorage.getItem('numeroOrden')||'1000');
-    }
-    crear(cliente,auto,servicio){
-      this.numero++;
-      const orden={numero:this.numero,fecha:new Date().toLocaleDateString(),cliente,auto,servicio,estado:'Diagnóstico',costo:0,notas:''};
-      this.ordenes.unshift(orden);
-      this.guardar();
-      return this.numero;
-    }
-    cambiarEstado(numero,estado){
-      const o=this.ordenes.find(x=>x.numero==numero);
-      if(o){o.estado=estado;this.guardar();alert(`Orden #${numero} ahora es: ${estado}`);}
-    }
-    guardar(){
-      localStorage.setItem('ordenes',JSON.stringify(this.ordenes));
-      localStorage.setItem('numeroOrden',this.numero);
-    }
+/* ---------- ÓRDENES ---------- */
+class SistemaOrdenes{
+  constructor(){
+    this.ordenes=JSON.parse(localStorage.getItem('ordenes')||'[]');
+    this.numero=parseInt(localStorage.getItem('numeroOrden')||'1000');
   }
-  const sisOrdenes=new SistemaOrdenes();
-  function nuevaOrden(){
-    const cliente=document.getElementById('ordCliente').value;
-    const auto=document.getElementById('ordAuto').value;
-    const servicio=document.getElementById('ordServicio').value;
-    if(!cliente||!auto)return alert('Completa cliente y vehículo');
-    const num=sisOrdenes.crear(cliente,auto,servicio);
-    alert(`Orden #${num} creada`);
-    renderOrdenes();
+  crear(cliente,auto,servicio){
+    this.numero++;
+    const orden={numero:this.numero,fecha:new Date().toLocaleDateString(),cliente,auto,servicio,estado:'Diagnóstico',costo:0,notas:''};
+    this.ordenes.unshift(orden);
+    this.guardar();
+    return this.numero;
   }
-  function renderOrdenes(){
-    const tbody=document.querySelector('#tablaOrdenes tbody');
-    tbody.innerHTML='';
-    sisOrdenes.ordenes.forEach(o=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`
-        <td>${o.numero}</td><td>${o.fecha}</td><td>${o.cliente}</td><td>${o.auto}</td><td>${o.servicio}</td>
-        <td>${o.estado}</td>
-        <td>
-          <select onchange="sisOrdenes.cambiarEstado(${o.numero},this.value)">
-            <option ${o.estado==='Diagnóstico'?'selected':''}>Diagnóstico</option>
-            <option ${o.estado==='Reparación'?'selected':''}>Reparación</option>
-            <option ${o.estado==='Pruebas'?'selected':''}>Pruebas</option>
-            <option ${o.estado==='Entregado'?'selected':''}>Entregado</option>
-          </select>
-        </td>`;
-      tbody.appendChild(tr);
-    });
+  cambiarEstado(numero,estado){
+    const o=this.ordenes.find(x=>x.numero==numero);
+    if(o){o.estado=estado;this.guardar();alert(`Orden #${numero} ahora es: ${estado}`);}
   }
+  guardar(){
+    localStorage.setItem('ordenes',JSON.stringify(this.ordenes));
+    localStorage.setItem('numeroOrden',this.numero);
+  }
+}
+const sisOrdenes=new SistemaOrdenes();
 
-  /* ---------- INVENTARIO 300 PRODUCTOS ---------- */
-  let productos   = JSON.parse(localStorage.getItem('productos300'))||[];
-  let pagina      = 1;
-  const POR_PAG   = 20;
+function nuevaOrden(){
+  const cliente=document.getElementById('ordCliente').value;
+  const auto=document.getElementById('ordAuto').value;
+  const servicio=document.getElementById('ordServicio').value;
+  if(!cliente||!auto)return alert('Completa cliente y vehículo');
+  const num=sisOrdenes.crear(cliente,auto,servicio);
+  alert(`Orden #${num} creada`);
+  renderOrdenes();
+}
 
-  function cargarCSV(){
-    const file=document.getElementById('csvFile').files[0];
-    if(!file){alert('Selecciona un archivo CSV');return;}
-    const reader=new FileReader();
-    reader.onload=function(e){
-      const lines=e.target.result.split('\n');
-      const lista=[];
-      for(let i=1;i<lines.length;i++){
-        const cols=lines[i].split(',');
-        if(cols.length>=9){
-          lista.push({
-            codigo_oem:  cols[0].trim(),
-            nombre:      cols[1].trim(),
-            marca:       cols[2].trim(),
-            modelo:      cols[3].trim(),
-            anio:        cols[4].trim(),
-            precio:      parseFloat(cols[5])||0,
-            stock:       parseInt(cols[6])||0,
-            imagen_url:  cols[7].trim(),
-            descripcion: cols[8].trim()
-          });
-        }
-      }
-      localStorage.setItem('productos300',JSON.stringify(lista));
-      document.getElementById('resCSV').textContent=`✅ ${lista.length} productos cargados`;
-      renderInventario();
+function renderOrdenes(){
+  const tbody=document.querySelector('#tablaOrdenes tbody');
+  tbody.innerHTML='';
+  sisOrdenes.ordenes.forEach(o=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${o.numero}</td><td>${o.fecha}</td><td>${o.cliente}</td><td>${o.auto}</td><td>${o.servicio}</td>
+      <td>${o.estado}</td>
+      <td>
+        <select onchange="sisOrdenes.cambiarEstado(${o.numero},this.value)">
+          <option ${o.estado==='Diagnóstico'?'selected':''}>Diagnóstico</option>
+          <option ${o.estado==='Reparación'?'selected':''}>Reparación</option>
+          <option ${o.estado==='Pruebas'?'selected':''}>Pruebas</option>
+          <option ${o.estado==='Entregado'?'selected':''}>Entregado</option>
+        </select>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ---------- TIENDA ADMIN ---------- */
+const carrito=[];
+function renderTienda(){
+  const div=document.getElementById('catalogoCliente');
+  let html='';
+  const lista=JSON.parse(localStorage.getItem('productos300'))||[];
+  lista.slice(0,20).forEach(p=>{
+    html+=`
+      <div class="producto-card">
+        <strong>${p.nombre}</strong> (${p.codigo_oem})<br>
+        Marca: ${p.marca} | Modelo: ${p.modelo} | Año: ${p.anio}<br>
+        Precio: <b>$${p.precio}</b> | Stock: ${p.stock}<br>
+        <button onclick="wpProducto('${p.codigo_oem}','${p.nombre}',${p.precio},${p.stock})">Comprar por WhatsApp</button>
+      </div>`;
+  });
+  div.innerHTML=html;
+  actualizarCarrito();
+}
+
+function agregarCarrito(id,nombre,precio){
+  const existe=carrito.find(i=>i.id===id);
+  if(existe){existe.cantidad++}else{carrito.push({id,nombre,precio,cantidad:1})}
+  actualizarCarrito();
+}
+
+function actualizarCarrito(){
+  const div=document.getElementById('itemsCarrito');
+  div.innerHTML='';
+  let total=0;
+  carrito.forEach(i=>{
+    total+=i.precio*i.cantidad;
+    div.innerHTML+=`<div class="carrito-item">${i.nombre} x${i.cantidad} = $${i.precio*i.cantidad} <button onclick="quitarCarrito('${i.id}')">Quitar</button></div>`;
+  });
+  document.getElementById('totalCarrito').textContent=total.toFixed(2);
+}
+
+function quitarCarrito(id){
+  const idx=carrito.findIndex(i=>i.id===id);
+  if(idx>-1){carrito.splice(idx,1);actualizarCarrito();}
+}
+
+function pagar(){
+  alert('Pago simulado completado. Gracias por tu compra en Airbag & Radar Solutions.');
+  carrito.length=0;actualizarCarrito();
+}
+
+/* ---------- DESCRIPCIÓN ---------- */
+function guardarDescripcion() {
+  const texto = document.getElementById('descProducto').value;
+  localStorage.setItem('descripcionProducto', texto);
+  mostrarDescripcion();
+  alert('Descripción guardada');
+}
+
+function mostrarDescripcion() {
+  const guardado = localStorage.getItem('descripcionProducto') || 'Sin descripción aún.';
+  document.getElementById('textoDescripcion').textContent = guardado;
+}
+
+/* ---------- IMÁGENES ---------- */
+let idxImg=0;
+function mover(dir){
+  const imgs=document.querySelectorAll('.carousel img');
+  imgs[idxImg].classList.remove('active');
+  idxImg=(idxImg+dir+imgs.length)%imgs.length;
+  imgs[idxImg].classList.add('active');
+}
+
+function subirImg(num,input){
+  const bar=document.getElementById('bar'+num);
+  const img=document.getElementById('img'+(num+1));
+  if(!input.files||!input.files[0])return;
+  let pct=0;
+  const interval=setInterval(()=>{
+    pct+=10;
+    bar.style.width=pct+'%';
+    bar.textContent=pct+'%';
+    if(pct>=100){
+      clearInterval(interval);
+      const reader=new FileReader();
+      reader.onload=e=>{img.src=e.target.result;if(num===0)img.classList.add('active');};
+      reader.readAsDataURL(input.files[0]);
+    }
+  },50);
+}
+
+/* ---------- WHATSAPP ---------- */
+function wpProducto(codigo,nombre,precio,stock){
+  const texto=`Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nCódigo: ${codigo}\nProducto: ${nombre}\nPrecio: $${precio} MXN\nStock: ${stock} unidades\n\n¿Cómo hago el depósito?`;
+  window.open(`https://wa.me/526611721599?text=${encodeURIComponent(texto)}`,'_blank');
+}
+
+/* ---------- GUARDAR CAMBIOS EN GITHUB ---------- */
+const TOKEN = "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";
+async function guardarCambiosEnGitHub(){
+  const lista   = JSON.parse(localStorage.getItem('productos300'))||[];
+  const csv     = Papa.unparse(lista);
+  const encoded = btoa(unescape(encodeURIComponent(csv)));
+  const url     = 'https://api.github.com/repos/xlaraislas-tech/airbag-radar-solutions/contents/productos-ml-final-v10.csv';
+
+  try{
+    const getRes = await fetch(url, {headers:{Authorization:'token '+TOKEN}});
+    const sha    = getRes.ok ? (await getRes.json()).sha : null;
+    const body = {
+      message:'Actualización automática desde admin.html',
+      content:encoded,
+      sha:sha
     };
-    reader.readAsText(file);
-  }
-
-  function agregarProducto(){
-    const cod=document.getElementById('quickCodigo').value;
-    const nom=document.getElementById('quickNombre').value;
-    const mar=document.getElementById('quickMarca').value;
-    const mod=document.getElementById('quickModelo').value;
-    const anio=document.getElementById('quickAnio').value;
-    const pre=parseFloat(document.getElementById('quickPrecio').value)||0;
-    const stock=parseInt(document.getElementById('quickStock').value)||0;
-    const img=document.getElementById('quickImg').value;
-    const desc=document.getElementById('quickDesc').value;
-    if(!cod||!nom){alert('Código y nombre obligatorios');return;}
-    const lista=JSON.parse(localStorage.getItem('productos300'))||[];
-    const existe=lista.find(p=>p.codigo_oem===cod);
-    if(existe){
-      Object.assign(existe,{nombre:nom,marca:mar,modelo:mod,anio:anio,precio:pre,stock:stock,imagen_url:img,descripcion:desc});
-    }else{
-      lista.push({codigo_oem:cod,nombre:nom,marca:mar,modelo:mod,anio:anio,precio:pre,stock:stock,imagen_url:img,descripcion:desc});
-    }
-    localStorage.setItem('productos300',JSON.stringify(lista));
-    alert('Producto guardado');
-    renderInventario();
-  }
-
-  function renderInventario(){
-    const lista=JSON.parse(localStorage.getItem('productos300'))||[];
-    const div=document.getElementById('listaProductos');
-    div.innerHTML='';
-    const totalPag=Math.ceil(lista.length/POR_PAG);
-    pagina=Math.min(Math.max(pagina,1),totalPag);
-    const ini=(pagina-1)*POR_PAG;
-    const fin=ini+POR_PAG;
-    const ver=lista.slice(ini,fin);
-    div.innerHTML='<table class="inventario"><thead><tr><th>Código</th><th>Nombre</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead><tbody>';
-    ver.forEach(p=>{
-      div.innerHTML+=`<tr>
-        <td>${p.codigo_oem}</td><td>${p.nombre}</td><td>${p.marca}</td><td>${p.modelo}</td><td>${p.anio}</td>
-        <td><input type="number" value="${p.precio}" onchange="actualizarCampo('${p.codigo_oem}','precio',this.value)"></td>
-        <td><input type="number" value="${p.stock}" onchange="actualizarCampo('${p.codigo_oem}','stock',this.value)"></td>
-        <td><button onclick="eliminarProducto('${p.codigo_oem}')">🗑️</button></td>
-      </tr>`;
+    const putRes = await fetch(url,{
+      method:'PUT',
+      headers:{
+        Authorization:'token '+TOKEN,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(body)
     });
-    div.innerHTML+='</tbody></table>';
-    document.querySelector('#inventario button[onclick*="cambiarPagina(-1)"]').disabled=pagina===1;
-    document.querySelector('#inventario button[onclick*="cambiarPagina(1)"]').disabled=pagina===totalPag;
+    const resMsg = putRes.ok ? '✅ CSV subido correctamente. La tienda se actualizará en 30-60 s.'
+                               : '❌ Error: '+(await putRes.json()).message;
+    document.getElementById('resGitHub').textContent=resMsg;
+  }catch(e){
+    document.getElementById('resGitHub').textContent='❌ Error de red: '+e.message;
   }
+}
 
-  function actualizarCampo(codigo,campo,valor){
-    const lista=JSON.parse(localStorage.getItem('productos300'))||[];
-    const p=lista.find(x=>x.codigo_oem===codigo);
-    if(p){p[campo]=campo==='precio'?parseFloat(valor):parseInt(valor);localStorage.setItem('productos300',JSON.stringify(lista));}
+/* ---------- ARRANQUE ---------- */
+function iniciarTodo(){
+  if(!localStorage.getItem('productos300')){
+    localStorage.setItem('productos300',JSON.stringify([
+      {codigo_oem:'VOL-CIV-18',nombre:'Airbag Volante',marca:'Honda',modelo:'Civic',anio:'2018',precio:3500,stock:5,imagen_url:'',descripcion:'Original Honda'},
+      {codigo_oem:'AIR-COP-20',nombre:'Airbag Copiloto',marca:'Toyota',modelo:'RAV4',anio:'2020',precio:2800,stock:3,imagen_url:'',descripcion:'Original Toyota'},
+      {codigo_oem:'MOD-SRS-19',nombre:'Módulo SRS',marca:'Nissan',modelo:'Sentra',anio:'2019',precio:3200,stock:7,imagen_url:'',descripcion:'Módulo restaurado'},
+      {codigo_oem:'SEN-IMP-21',nombre:'Sensor Impacto',marca:'Mazda',modelo:'3',anio:'2021',precio:1500,stock:10,imagen_url:'',descripcion:'Sensor nuevo'}
+    ]));
   }
-
-  function eliminarProducto(codigo){
-    let lista=JSON.parse(localStorage.getItem('productos300'))||[];
-    lista=lista.filter(p=>p.codigo_oem!==codigo);
-    localStorage.setItem('productos300',JSON.stringify(lista));
-    renderInventario();
-  }
-
-  function cambiarPagina(dir){
-    pagina+=dir;
-    renderInventario();
-  }
-
-  /* ---------- TIENDA ADMIN ---------- */
-  const carrito=[];
-  function renderTienda(){
-    const div=document.getElementById('catalogoCliente');
-    let html='';
-    const lista=JSON.parse(localStorage.getItem('productos300'))||[];
-    lista.slice(0,20).forEach(p=>{
-      html+=`
-        <div class="producto-card">
-          <strong>${p.nombre}</strong> (${p.codigo_oem})<br>
-          Marca: ${p.marca} | Modelo: ${p.modelo} | Año: ${p.anio}<br>
-          Precio: <b>$${p.precio}</b> | Stock: ${p.stock}<br>
-          <button onclick="wpProducto('${p.codigo_oem}','${p.nombre}',${p.precio},${p.stock})">Comprar por WhatsApp</button>
-        </div>`;
-    });
-    div.innerHTML=html;
-    actualizarCarrito();
-  }
-
-  function agregarCarrito(id,nombre,precio){
-    const existe=carrito.find(i=>i.id===id);
-    if(existe){existe.cantidad++}else{carrito.push({id,nombre,precio,cantidad:1})}
-    actualizarCarrito();
-  }
-
-  function actualizarCarrito(){
-    const div=document.getElementById('itemsCarrito');
-    div.innerHTML='';
-    let total=0;
-    carrito.forEach(i=>{
-      total+=i.precio*i.cantidad;
-      div.innerHTML+=`<div class="carrito-item">${i.nombre} x${i.cantidad} = $${i.precio*i.cantidad} <button onclick="quitarCarrito('${i.id}')">Quitar</button></div>`;
-    });
-    document.getElementById('totalCarrito').textContent=total.toFixed(2);
-  }
-
-  function quitarCarrito(id){
-    const idx=carrito.findIndex(i=>i.id===id);
-    if(idx>-1){carrito.splice(idx,1);actualizarCarrito();}
-  }
-
-  function pagar(){
-    alert('Pago simulado completado. Gracias por tu compra en Airbag & Radar Solutions.');
-    carrito.length=0;actualizarCarrito();
-  }
-
-  /* ---------- DESCRIPCIÓN ---------- */
-  function guardarDescripcion() {
-    const texto = document.getElementById('descProducto').value;
-    localStorage.setItem('descripcionProducto', texto);
-    mostrarDescripcion();
-    alert('Descripción guardada');
-  }
-
-  function mostrarDescripcion() {
-    const guardado = localStorage.getItem('descripcionProducto') || 'Sin descripción aún.';
-    document.getElementById('textoDescripcion').textContent = guardado;
-  }
-
-  /* ---------- IMÁGENES ---------- */
-  let idxImg=0;
-  function mover(dir){
-    const imgs=document.querySelectorAll('.carousel img');
-    imgs[idxImg].classList.remove('active');
-    idxImg=(idxImg+dir+imgs.length)%imgs.length;
-    imgs[idxImg].classList.add('active');
-  }
-
-  function subirImg(num,input){
-    const bar=document.getElementById('bar'+num);
-    const img=document.getElementById('img'+(num+1));
-    if(!input.files||!input.files[0])return;
-    let pct=0;
-    const interval=setInterval(()=>{
-      pct+=10;
-      bar.style.width=pct+'%';
-      bar.textContent=pct+'%';
-      if(pct>=100){
-        clearInterval(interval);
-        const reader=new FileReader();
-        reader.onload=e=>{img.src=e.target.result;if(num===0)img.classList.add('active');};
-        reader.readAsDataURL(input.files[0]);
-      }
-    },50);
-  }
-
-  /* ---------- WHATSAPP POR PRODUCTO ---------- */
-  function wpProducto(codigo,nombre,precio,stock){
-    const texto=`Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nCódigo: ${codigo}\nProducto: ${nombre}\nPrecio: $${precio} MXN\nStock: ${stock} unidades\n\n¿Cómo hago el depósito?`;
-    window.open(`https://wa.me/526611721599?text=${encodeURIComponent(texto)}`,'_blank');
-  }
-
-  /* ---------- INICIO ---------- */
-  window.onload=()=>{
-    // Si no hay productos, pone los 4 de ejemplo
-    if(!localStorage.getItem('productos300')){
-      localStorage.setItem('productos300',JSON.stringify([
-        {codigo_oem:'VOL-CIV-18',nombre:'Airbag Volante',marca:'Honda',modelo:'Civic',anio:'2018',precio:3500,stock:5,imagen_url:'',descripcion:'Original Honda'},
-        {codigo_oem:'AIR-COP-20',nombre:'Airbag Copiloto',marca:'Toyota',modelo:'RAV4',anio:'2020',precio:2800,stock:3,imagen_url:'',descripcion:'Original Toyota'},
-        {codigo_oem:'MOD-SRS-19',nombre:'Módulo SRS',marca:'Nissan',modelo:'Sentra',anio:'2019',precio:3200,stock:7,imagen_url:'',descripcion:'Módulo restaurado'},
-        {codigo_oem:'SEN-IMP-21',nombre:'Sensor Impacto',marca:'Mazda',modelo:'3',anio:'2021',precio:1500,stock:10,imagen_url:'',descripcion:'Sensor nuevo'}
-      ]));
-    }
-    productos=JSON.parse(localStorage.getItem('productos300'));
-    renderInventario();
-    renderTienda();
-    mostrarDescripcion();
-  };
+  productos=JSON.parse(localStorage.getItem('productos300'));
+  renderInventario();
+  renderOrdenes();
+  renderTienda();
+  mostrarDescripcion();
+}
 </script>
 </body>
 </html>
