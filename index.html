@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <title>Airbag & Radar Solutions - Catálogo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- PapaParse para leer CSV sin errores -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
     body{background:#ededed;color:#333}
@@ -15,7 +17,6 @@
     section{display:none;padding:20px;max-width:1200px;margin:auto;background:#fff;min-height:70vh}
     section.active{display:block}
     h2{margin-bottom:15px;color:#333}
-    /* ESTILO MERCADO LIBRE */
     .catalogo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;padding:20px 0}
     .product-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.05);transition:.3s}
     .product-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1)}
@@ -59,33 +60,34 @@
 <script>
   /* ---------- CARGAR PRODUCTOS DESDE TU CSV ---------- */
   async function cargarProductos() {
-    const res = await fetch('https://raw.githubusercontent.com/xlaraislas-tech/airbag-radar-solutions/main/productos-ml-final-v10.csv');
-    const text = await res.text();
-    const lineas = text.split('\n');
-    const productos = [];
-    for (let i = 1; i < lineas.length; i++) {
-      const cols = lineas[i].split(',');
-      if (cols.length >= 13) {
-        productos.push({
-          codigo_oem: cols[0].trim(),
-          titulo: cols[1].replace(/"/g, '').trim(),
-          descripcion_larga: cols[2].replace(/"/g, '').trim(),
-          caracteristicas: cols[3].replace(/"/g, '').trim(),
-          categoria: cols[4].trim(),
-          subcategoria: cols[5].trim(),
-          marca: cols[6].trim(),
-          modelo: cols[7].trim(),
-          anio: cols[8].trim(),
-          precio: parseFloat(cols[9]) || 0,
-          stock: parseInt(cols[10]) || 0,
-          imagen_url: cols[11].trim(),
-          imagen_url_2: cols[12].trim(),
-          imagen_url_3: cols[13].trim(),
-          etiquetas: cols[14].replace(/"/g, '').trim()
-        });
+    const url = 'https://raw.githubusercontent.com/xlaraislas-tech/airbag-radar-solutions/main/productos-ml-final-v10.csv';
+    const res = await fetch(url);
+    const texto = await res.text();
+
+    Papa.parse(texto, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(res) {
+        const productos = res.data.map(p => ({
+          codigo_oem:       (p.codigo_oem       || '').trim(),
+          titulo:           (p.titulo           || '').trim(),
+          descripcion_larga:(p.descripcion_larga|| '').trim(),
+          caracteristicas:  (p.caracteristicas  || '').trim(),
+          categoria:        (p.categoria        || '').trim(),
+          subcategoria:     (p.subcategoria     || '').trim(),
+          marca:            (p.marca            || '').trim(),
+          modelo:           (p.modelo           || '').trim(),
+          anio:             (p.anio             || '').trim(),
+          precio:           parseFloat(p.precio) || 0,
+          stock:            parseInt(p.stock)   || 0,
+          imagen_url:       (p.imagen_url       || '').trim(),
+          imagen_url_2:     (p.imagen_url_2     || '').trim(),
+          imagen_url_3:     (p.imagen_url_3     || '').trim(),
+          etiquetas:        (p.etiquetas        || '').trim()
+        }));
+        renderCatalogo(productos);
       }
-    }
-    renderCatalogo(productos);
+    });
   }
 
   function renderCatalogo(productos) {
@@ -125,5 +127,5 @@
   };
 </script>
 </body>
-
 </html>
+
