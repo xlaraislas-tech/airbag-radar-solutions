@@ -23,11 +23,6 @@
   th{background:#f2f2f2}
   input[type=number],input[type=text],select,textarea{width:100%;padding:6px;margin:4px 0}
   button{padding:8px 12px;margin:4px;cursor:pointer}
-  .carousel{position:relative;width:100%;height:350px;background:#000;overflow:hidden;border-radius:8px;margin-bottom:15px}
-  .carousel img{width:100%;height:100%;object-fit:contain;display:none}
-  .carousel img.active{display:block}
-  .carousel button{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.7);border:none;padding:10px;font-size:20px;cursor:pointer;border-radius:50%}
-  .prev{left:10px}.next{right:10px}
   .progress-bar{width:100%;height:18px;background:#e0e0e0;border-radius:9px;overflow:hidden;margin-bottom:5px}
   .progress-bar div{height:100%;background:#28a745;width:0%;transition:width .3s;text-align:center;color:#fff;font-size:12px;line-height:18px}
   footer{text-align:center;padding:20px;background:#0d1b2a;color:#fff}
@@ -67,10 +62,9 @@
     <div class="stat-card"><h3>Productos Vendidos</h3><p class="stat-number" id="productosVendidos">0</p></div>
     <div class="stat-card"><h3>Clientes Nuevos</h3><p class="stat-number" id="clientesNuevos">0</p></div>
   </div>
-  <canvas id="grafica" width="600" height="200"></canvas>
 </section>
 
-<!-- 2. ÓRDENES DE TRABAJO -->
+<!-- 2. ÓRDENES -->
 <section id="ordenes">
   <h2>🔧 Órdenes de Trabajo - Airbag & Radar Solutions</h2>
   <div class="admin-only">
@@ -95,35 +89,7 @@
 <!-- 3. TIENDA ADMIN -->
 <section id="tienda">
   <h2>🛒 Tienda Admin - Airbag & Radar Solutions</h2>
-
-  <!-- Subir imágenes y descripción -->
-  <div class="admin-only">
-    <h3>Subir imágenes del producto</h3>
-    <label>Imagen 1:</label><input type="file" accept="image/*" onchange="subirImg(0,this)"><div class="progress-bar"><div id="bar0">0%</div></div>
-    <label>Imagen 2:</label><input type="file" accept="image/*" onchange="subirImg(1,this)"><div class="progress-bar"><div id="bar1">0%</div></div>
-    <label>Imagen 3:</label><input type="file" accept="image/*" onchange="subirImg(2,this)"><div class="progress-bar"><div id="bar2">0%</div></div>
-
-    <h3>Descripción del producto</h3>
-    <textarea id="descProducto" rows="4" style="width:100%" placeholder="Escribe aquí la descripción del producto..."></textarea>
-    <button onclick="guardarDescripcion()">Guardar descripción</button>
-  </div>
-
-  <!-- Carrusel de imágenes -->
-  <div class="carousel">
-    <img id="img1" src="" alt="Imagen 1">
-    <img id="img2" src="" alt="Imagen 2">
-    <img id="img3" src="" alt="Imagen 3">
-    <button class="prev" onclick="mover(-1)">&#10094;</button>
-    <button class="next" onclick="mover(+1)">&#10095;</button>
-  </div>
-
-  <!-- Descripción guardada -->
-  <div id="textoDescripcion" style="margin:15px 0;font-size:16px;"></div>
-
-  <!-- Catálogo de productos -->
   <div id="catalogoCliente"></div>
-
-  <!-- Carrito de compras -->
   <div id="carritoUI" class="admin-only">
     <h3>Carrito</h3>
     <div id="itemsCarrito"></div>
@@ -285,6 +251,7 @@ function renderTienda(){
         <strong>${p.nombre}</strong> (${p.codigo_oem})<br>
         Marca: ${p.marca} | Modelo: ${p.modelo} | Año: ${p.anio}<br>
         Precio: <b>$${p.precio}</b> | Stock: ${p.stock}<br>
+        <button onclick="agregarCarrito('${p.codigo_oem}','${p.nombre}',${p.precio})">Agregar al carrito</button>
         <button onclick="wpProducto('${p.codigo_oem}','${p.nombre}',${p.precio},${p.stock})">Comprar por WhatsApp</button>
       </div>`;
   });
@@ -395,6 +362,100 @@ async function guardarCambiosEnGitHub(){
   }catch(e){
     document.getElementById('resGitHub').textContent='❌ Error de red: '+e.message;
   }
+}
+
+/* ---------- INVENTARIO ---------- */
+let productos = JSON.parse(localStorage.getItem('productos300'))||[];
+let pagina = 1;
+const POR_PAG = 20;
+
+function cargarCSV(){
+  const file=document.getElementById('csvFile').files[0];
+  if(!file){alert('Selecciona un archivo CSV');return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    Papa.parse(e.target.result,{header:true,skipEmptyLines:true,complete:function(result){
+      const lista=result.data.map(p=>({
+        codigo_oem:  (p.codigo_oem  || '').trim(),
+        nombre:      (p.nombre      || '').trim(),
+        marca:       (p.marca       || '').trim(),
+        modelo:      (p.modelo      || '').trim(),
+        anio:        (p.anio        || '').trim(),
+        precio:      parseFloat(p.precio)||0,
+        stock:       parseInt(p.stock)||0,
+        imagen_url:  (p.imagen_url  || '').trim(),
+        descripcion: (p.descripcion || '').trim()
+      })).filter(p=>p.codigo_oem);
+      localStorage.setItem('productos300',JSON.stringify(lista));
+      document.getElementById('resCSV').textContent=`✅ ${lista.length} productos cargados`;
+      renderInventario();
+    }});
+  };
+  reader.readAsText(file);
+}
+
+function agregarProducto(){
+  const cod=document.getElementById('quickCodigo').value;
+  const nom=document.getElementById('quickNombre').value;
+  const mar=document.getElementById('quickMarca').value;
+  const mod=document.getElementById('quickModelo').value;
+  const anio=document.getElementById('quickAnio').value;
+  const pre=parseFloat(document.getElementById('quickPrecio').value)||0;
+  const stock=parseInt(document.getElementById('quickStock').value)||0;
+  const img=document.getElementById('quickImg').value;
+  const desc=document.getElementById('quickDesc').value;
+  if(!cod||!nom){alert('Código y nombre obligatorios');return;}
+  const lista=JSON.parse(localStorage.getItem('productos300'))||[];
+  const existe=lista.find(p=>p.codigo_oem===cod);
+  if(existe){
+    Object.assign(existe,{nombre:nom,marca:mar,modelo:mod,anio:anio,precio:pre,stock:stock,imagen_url:img,descripcion:desc});
+  }else{
+    lista.push({codigo_oem:cod,nombre:nom,marca:mar,modelo:mod,anio:anio,precio:pre,stock:stock,imagen_url:img,descripcion:desc});
+  }
+  localStorage.setItem('productos300',JSON.stringify(lista));
+  alert('Producto guardado');
+  renderInventario();
+}
+
+function renderInventario(){
+  const lista=JSON.parse(localStorage.getItem('productos300'))||[];
+  const div=document.getElementById('listaProductos');
+  div.innerHTML='';
+  const totalPag=Math.ceil(lista.length/POR_PAG);
+  pagina=Math.min(Math.max(pagina,1),totalPag);
+  const ini=(pagina-1)*POR_PAG;
+  const fin=ini+POR_PAG;
+  const ver=lista.slice(ini,fin);
+  div.innerHTML='<table class="inventario"><thead><tr><th>Código</th><th>Nombre</th><th>Marca</th><th>Modelo</th><th>Año</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead><tbody>';
+  ver.forEach(p=>{
+    div.innerHTML+=`<tr>
+      <td>${p.codigo_oem}</td><td>${p.nombre}</td><td>${p.marca}</td><td>${p.modelo}</td><td>${p.anio}</td>
+      <td><input type="number" value="${p.precio}" onchange="actualizarCampo('${p.codigo_oem}','precio',this.value)"></td>
+      <td><input type="number" value="${p.stock}" onchange="actualizarCampo('${p.codigo_oem}','stock',this.value)"></td>
+      <td><button onclick="eliminarProducto('${p.codigo_oem}')">🗑️</button></td>
+    </tr>`;
+  });
+  div.innerHTML+='</tbody></table>';
+  document.querySelector('#inventario button[onclick*="cambiarPagina(-1)"]').disabled=pagina===1;
+  document.querySelector('#inventario button[onclick*="cambiarPagina(1)"]').disabled=pagina===totalPag;
+}
+
+function actualizarCampo(codigo,campo,valor){
+  const lista=JSON.parse(localStorage.getItem('productos300'))||[];
+  const p=lista.find(x=>x.codigo_oem===codigo);
+  if(p){p[campo]=campo==='precio'?parseFloat(valor):parseInt(valor);localStorage.setItem('productos300',JSON.stringify(lista));}
+}
+
+function eliminarProducto(codigo){
+  let lista=JSON.parse(localStorage.getItem('productos300'))||[];
+  lista=lista.filter(p=>p.codigo_oem!==codigo);
+  localStorage.setItem('productos300',JSON.stringify(lista));
+  renderInventario();
+}
+
+function cambiarPagina(dir){
+  pagina+=dir;
+  renderInventario();
 }
 
 /* ---------- ARRANQUE ---------- */
