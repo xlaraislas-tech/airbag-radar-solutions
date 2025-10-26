@@ -286,19 +286,6 @@ function pagar(){
   carrito.length=0;actualizarCarrito();
 }
 
-/* ---------- DESCRIPCIÓN ---------- */
-function guardarDescripcion() {
-  const texto = document.getElementById('descProducto').value;
-  localStorage.setItem('descripcionProducto', texto);
-  mostrarDescripcion();
-  alert('Descripción guardada');
-}
-
-function mostrarDescripcion() {
-  const guardado = localStorage.getItem('descripcionProducto') || 'Sin descripción aún.';
-  document.getElementById('textoDescripcion').textContent = guardado;
-}
-
 /* ---------- WHATSAPP ---------- */
 function wpProducto(codigo,nombre,precio,stock){
   const texto=`Hola, vengo de Airbag & Radar Solutions y quiero comprar:\n\nCódigo: ${codigo}\nProducto: ${nombre}\nPrecio: $${precio} MXN\nStock: ${stock} unidades\n\n¿Cómo hago el depósito?`;
